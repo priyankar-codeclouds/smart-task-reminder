@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
-use Carbon\Carbon;
+use App\Services\TelegramService;
 use Illuminate\Http\Request;
 
 class TaskController extends Controller
@@ -121,13 +121,14 @@ class TaskController extends Controller
 
     public function checkReminders()
     {
-        $now = Carbon::now();
-        $windowEnd = $now->copy()->addMinutes(30);
+        $now = now();
+        $windowEnd = $now->copy()->addHours(12);
 
         $tasks = Task::query()
             ->where('status', 'pending')
             ->where('reminder_sent', false)
-            ->whereBetween('due_date', [$now, $windowEnd])
+            ->where('due_date', '>=', $now)
+            ->where('due_date', '<=', $windowEnd)
             ->orderBy('due_date', 'asc')
             ->get(['id', 'title', 'description', 'due_date']);
 
@@ -135,10 +136,44 @@ class TaskController extends Controller
             Task::whereIn('id', $tasks->pluck('id'))->update(['reminder_sent' => true]);
         }
 
+        $tasks = $tasks->map(function ($task) use ($now) {
+            return [
+                'id' => $task->id,
+                'title' => $task->title,
+                'description' => $task->description,
+                'due_date' => $task->due_date,
+                'hours_until_due' => round($now->diffInMinutes($task->due_date, false) / 60, 2),
+            ];
+        })->values();
+
         return response()->json([
             'success' => true,
             'count' => $tasks->count(),
             'tasks' => $tasks,
         ]);
+    }
+
+    public function testTelegramConfig()
+    {
+        $botToken = config('telegram.bot_token');
+        $chatId = config('telegram.chat_id');
+
+        return response()->json([
+            'configured' => filled($botToken) && filled($chatId),
+            'bot_token_present' => filled($botToken),
+            'chat_id_present' => filled($chatId),
+        ]);
+    }
+
+    public function sendTelegramTest(TelegramService $telegramService)
+    {
+        $message = "🔔 Smart Task Reminder\n\nTelegram integration is working successfully.";
+        $response = $telegramService->sendMessage($message);
+
+        if (is_array($response)) {
+            return response()->json($response, 422);
+        }
+
+        return response()->json($response->json(), $response->status());
     }
 }

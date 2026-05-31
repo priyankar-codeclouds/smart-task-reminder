@@ -4,6 +4,8 @@ use App\Http\Controllers\TaskController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [TaskController::class, 'dashboard'])->name('dashboard');
+Route::get('/telegram/test', [TaskController::class, 'testTelegramConfig'])->name('telegram.test');
+Route::get('/telegram/send-test', [TaskController::class, 'sendTelegramTest'])->name('telegram.send-test');
 
 Route::get('/tasks', [TaskController::class, 'index'])->name('tasks.index');
 Route::get('/tasks/create', [TaskController::class, 'create'])->name('tasks.create');
