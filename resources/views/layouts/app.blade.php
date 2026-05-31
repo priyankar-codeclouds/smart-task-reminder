@@ -9,17 +9,19 @@
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
-            <a class="navbar-brand" href="{{ route('tasks.index') }}">Smart Task Reminder</a>
+            <a class="navbar-brand" href="{{ route('dashboard') }}">Smart Task Reminder</a>
             <div class="navbar-nav">
-                <a class="nav-link" href="{{ route('tasks.index') }}">Tasks</a>
+                <a class="nav-link {{ request()->routeIs('dashboard') ? 'active' : '' }}" href="{{ route('dashboard') }}">Dashboard</a>
+                <a class="nav-link {{ request()->routeIs('tasks.*') ? 'active' : '' }}" href="{{ route('tasks.index') }}">Tasks</a>
             </div>
         </div>
     </nav>
 
     <main class="container">
         @if (session('success'))
-            <div class="alert alert-success">
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
                 {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
 
