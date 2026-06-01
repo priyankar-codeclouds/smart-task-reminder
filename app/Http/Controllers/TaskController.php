@@ -137,12 +137,15 @@ class TaskController extends Controller
         }
 
         $tasks = $tasks->map(function ($task) use ($now) {
+            $dueDateInAppTimezone = $task->due_date->copy()->timezone(config('app.timezone'));
+
             return [
                 'id' => $task->id,
                 'title' => $task->title,
                 'description' => $task->description,
                 'due_date' => $task->due_date,
-                'hours_until_due' => round($now->diffInMinutes($task->due_date, false) / 60, 2),
+                'formatted_due_date' => $dueDateInAppTimezone->format('d M Y h:i A'),
+                'hours_until_due' => round($now->diffInMinutes($task->due_date, false) / 60, 1),
             ];
         })->values();
 
